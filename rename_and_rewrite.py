@@ -4,26 +4,33 @@ import re
 import sys
 
 # ディレクトリのパスを指定
-path = 'C:/Users/Student/Documents/rename_test/*'
-folder = glob.glob(path)
+path = 'C:/Users/Student/Documents/rename_test'
+folder = glob.glob(path + '/*')
 
 # 編集対象のファイル
 target_files = []
+
+# 変更対象のファイル内容を表示する
+def view_file():
+    for i in range(len(target_files)):
+        with open(target_files[i], encoding="utf-8") as f:
+            file_read = f.read()
+            print(target_files[i][len(path)+1:] + ':' + file_read)
 
 # 編集対象のファイルの存在チェック
 def get_target_files():
     print('【フォルダパス：】' + path[:-1])
     for i in range(len(folder)):
-        if old_name in folder[i]:
+        if old_name in folder[i][len(path)+1:]:
             target_files.append(folder[i])
         else:
             continue
     if len(target_files) == 0:
         print('「' + old_name + '」'  + 'を含むファイルが見つかりませんでした。')
         sys.exit()
-    # else:
-        # for j in range(len(target_files)):
-        #     print('temp.編集対象：', target_files[j])
+    else:
+        for j in range(len(target_files)):
+            print('temp.編集対象：', target_files[j])
 
 # 引数の定義
 def get_args(var1, var2):
@@ -63,7 +70,7 @@ def save_as_new():
             # ファイルを開く
             with open(target_files[i], encoding="utf-8") as f:
                 data_lines = f.read()
-
+                
             # ファイル中身の文字列置換（2か所）
             data_lines = data_lines.replace("06-31", "06-29")
             data_lines = data_lines.replace("0606", "0609")
@@ -75,7 +82,13 @@ def save_as_new():
             # ↓ ↓ そもそもファイル名を変更しない ↓ ↓
             # # with open(target_files[j], mode="w", encoding="utf-8") as f:
             
-            # ファイル編集適用 ["新しいファイル名（rename）に"]
+            # 変更後の名前が既に存在している場合は末尾に「_renamed」を追加する
+            if os.path.exists(rename[i]):
+                with open(rename[i] + '_renamed', mode="w", encoding="utf-8") as f:
+                        f.write(data_lines)
+                
+            
+            # ファイル編集適用
             with open(rename[i], mode="w", encoding="utf-8") as f:
                 f.write(data_lines)
                 
@@ -138,8 +151,8 @@ def overwrite():
             
             # ここを試験的に追加（変更後の名前が既に存在し、重複している場合）
             if os.path.exists(rename[i]):
-                # 末尾に「-renamed」を追加する
-                os.rename(target_files[i] + '-renamed', rename[i])
+                # 末尾に「_renamed」を追加する
+                os.rename(target_files[i] + '_renamed', rename[i])
             
             # ファイル名変更を適用
             os.rename(target_files[i], rename[i])
@@ -176,12 +189,14 @@ def overwrite():
 #         os.rename(target_files[i] + '-renamed', rename[i])
 
 def select_action():
-    print('次を選択し操作を選択してください。上書き：1  新規保存：2  何もせず終了：9')
+    print('次を選択し操作を選択してください。上書き：1  新規保存：2  ファイルを開く：3  何もせず終了：9')
     sel = input()
     if sel == '1':
         overwrite()
     elif sel == '2':
         save_as_new()
+    elif sel == '3':
+        view_file()
     elif sel == '9':
         sys.exit()
     else:
